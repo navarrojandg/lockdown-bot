@@ -1,0 +1,36 @@
+{
+  "name": "lockdown-bot",
+  "version": "1.0.0",
+  "description": "discord bot to configure and lockdown certain channels",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bundle": "tsc && git archive -v --output=bundle.zip --format=zip HEAD",
+    "tsc": "tsc",
+    "start": "node ./dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navarrojandg/lockdown-bot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "aws",
+    "typescript"
+  ],
+  "author": "jan derrick navarro",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/navarrojandg/lockdown-bot/issues"
+  },
+  "homepage": "https://github.com/navarrojandg/lockdown-bot#readme",
+  "dependencies": {
+    "@types/ws": "^7.2.7",
+    "discord.js": "^12.3.1",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^14.11.5"
+  }
+}
