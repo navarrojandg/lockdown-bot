@@ -4,6 +4,13 @@ dotenv.config();
 import Discord, { Message, MessageReaction } from 'discord.js';
 const client = new Discord.Client();
 const token = process.env.TOKEN;
+interface GuildContainer {
+  id: string;
+  activeMessage?: string;
+  prevPermissions?: Discord.PermissionString[];
+  postPermissions?: Discord.PermissionString[];
+};
+const gulidMap = new Map<string, GuildContainer>();
 client.on('ready', () => {
   client.user?.setPresence({
     activity: {
@@ -17,17 +24,29 @@ client.on('ready', () => {
 client.on('message', (msg: Message) => {
   if(msg.channel.type == 'text') {
     if(msg.member?.roles.highest.permissions.has('ADMINISTRATOR')) {
-      if(msg.content.startsWith('!lockdown')) lockdownHandler(msg);
+      if(msg.content.startsWith('!lockdown')) {
+        // cache the active guild
+        if(!!msg.guild) gulidMap.set(msg.guild.id, { id: msg.guild.id });
+        lockdownHandler(msg);
+      };
     };
   };
   return;
 });
 
 client.on('messageReactionAdd', (messageReaction, user) => {
-  if(user.id == client.user?.id) return; 
-  const userReaction = messageReaction.message.guild?.member(user.id);
-  if(userReaction?.roles.highest.permissions.has('ADMINISTRATOR')) {
-    if(messageReaction.emoji.name == '🔓') unlockHandler(messageReaction);
+  if(user.id == client.user?.id) return;
+  
+  let guild = messageReaction.message.guild;
+  if (!!guild) {
+    if(gulidMap.has(guild.id)) {
+      if(messageReaction.message.id === gulidMap.get(guild.id)?.activeMessage) {
+        const userReaction = guild?.member(user.id);
+        if(userReaction?.roles.highest.permissions.has('ADMINISTRATOR')) {
+          if(messageReaction.emoji.name == '🔓') unlockHandler(messageReaction);
+        };
+      };
+    };
   };
   return;
 });
@@ -60,23 +79,41 @@ const unlockEmbed = {
   timestamp: new Date()
 };
 
-// const lockdownPermissions: Discord.PermissionString[] = [
-//   'SEND_MESSAGES',
-//   'CONNECT',
-//   'STREAM'
-// ];
-function lockdownHandler(msg: Message) {
-  msg.channel.send({ embed: lockdownEmbed })
-    .then(m => {
-      m.react('🔓')
-    })
-    .catch(console.error);
+const removePermissions: Discord.PermissionString[] = [
+  'SEND_MESSAGES',
+  'CONNECT',
+  'STREAM',
+  'SPEAK',
+];
+
+const lockdownHandler = async (msg: Message) => {
+  if(!!msg.guild) {
+    let g = gulidMap.get(msg.guild.id);
+    if(!!g) {
+      g.prevPermissions = msg.guild.roles.everyone.permissions.toArray();
+      console.log(`[${g.id}] previous permissions`, g.prevPermissions);
+      g.postPermissions = g.prevPermissions.filter(perm => !removePermissions.includes(perm));
+      console.log(`[${g.id}] post permissions`, g.postPermissions);
+      // msg.guild.roles.everyone.setPermissions(new Discord.Permissions(g.postPermissions));
+      let sentMessage = await msg.channel.send({ embed: lockdownEmbed });
+      g.activeMessage = sentMessage.id;
+      await sentMessage.react('🔓');
+    };
+  };
+  return;
 };
 
-function unlockHandler(messageReaction: MessageReaction) {
-  // const everyonePerms = messageReaction.message.guild?.roles.everyone.permissions;
-  // lockdownPermissions.forEach(p => everyonePerms?.add(p));
-  messageReaction.message.channel.send({ embed: unlockEmbed });
+const unlockHandler = async (messageReaction: MessageReaction) => {
+  if(!!messageReaction.message.guild) {
+    let g = gulidMap.get(messageReaction.message.guild.id);
+    if(!!g) {
+      // let guildClient = await client.guilds.fetch(g.id);
+      // restore the permissions
+      // guildClient.roles.everyone.setPermissions(new Discord.Permissions(g.prevPermissions));
+      await messageReaction.message.channel.send({ embed: unlockEmbed });
+    };
+  };
+  return;
 };
 
 client.login(token);

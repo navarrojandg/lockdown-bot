@@ -41,6 +41,8 @@ client.on('messageReactionAdd', function (messageReaction, user) {
     var _a, _b;
     if (user.id == ((_a = client.user) === null || _a === void 0 ? void 0 : _a.id))
         return;
+    if (messageReaction.message.id != activeMessage)
+        return;
     var userReaction = (_b = messageReaction.message.guild) === null || _b === void 0 ? void 0 : _b.member(user.id);
     if (userReaction === null || userReaction === void 0 ? void 0 : userReaction.roles.highest.permissions.has('ADMINISTRATOR')) {
         if (messageReaction.emoji.name == '🔓')
@@ -75,23 +77,39 @@ var unlockEmbed = {
     },
     timestamp: new Date()
 };
-// const lockdownPermissions: Discord.PermissionString[] = [
-//   'SEND_MESSAGES',
-//   'CONNECT',
-//   'STREAM'
-// ];
-function lockdownHandler(msg) {
+var removePermissions = [
+    'SEND_MESSAGES',
+    'CONNECT',
+    'STREAM'
+];
+// let preLockdownPerms: number | undefined;
+var postLockdownPerms;
+var activeMessage;
+var lockdownHandler = function (msg) {
+    var _a, _b;
+    console.log('previous permissions', (_a = msg.guild) === null || _a === void 0 ? void 0 : _a.roles.everyone.permissions.toArray());
+    // preLockdownPerms = msg.guild?.roles.everyone.permissions.bitfield;
+    removePermissions.forEach(function (perm) {
+        var _a;
+        if ((_a = msg.guild) === null || _a === void 0 ? void 0 : _a.roles.everyone.permissions.has(perm)) {
+            postLockdownPerms = msg.guild.roles.everyone.permissions.remove(perm);
+            console.log(postLockdownPerms);
+        }
+        ;
+    });
+    (_b = msg.guild) === null || _b === void 0 ? void 0 : _b.roles.everyone.setPermissions(postLockdownPerms);
     msg.channel.send({ embed: lockdownEmbed })
         .then(function (m) {
-        m.react('🔓');
+        activeMessage = m.id;
+        m.react('🔓')
+            .catch(console.error);
     })
         .catch(console.error);
-}
-;
-function unlockHandler(messageReaction) {
+};
+var unlockHandler = function (messageReaction) {
     // const everyonePerms = messageReaction.message.guild?.roles.everyone.permissions;
     // lockdownPermissions.forEach(p => everyonePerms?.add(p));
+    // messageReaction.message.guild?.roles.everyone.setPermissions(new Discord.Permissions(preLockdownPerms));
     messageReaction.message.channel.send({ embed: unlockEmbed });
-}
-;
+};
 client.login(token);
