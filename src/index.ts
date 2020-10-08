@@ -75,7 +75,7 @@ const lockdownEmbed = {
 
 const unlockEmbed = {
   title: 'Lockdown Ended',
-  color: '#03FF00',
+  color: '#017C1B',
   description: 'This server is now unlocked. `@everyone` is now able to send messages or connect to voice channels.',
   footer: {
     text: 'lockdown bot',
@@ -86,7 +86,7 @@ const unlockEmbed = {
 
 const pongEmbed = {
   title: 'pong!',
-  color: '#03FF00',
+  color: '#017C1B',
   footer: {
     text: 'lockdown bot',
     icon_url: 'https://i.imgur.com/AFN0zRy.png',

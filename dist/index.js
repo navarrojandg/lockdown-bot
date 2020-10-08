@@ -78,6 +78,13 @@ client.on('message', function (msg) {
         ;
     }
     ;
+    if (msg.channel.type == 'dm') {
+        if (msg.content.startsWith('!ping')) {
+            msg.reply({ embed: pongEmbed });
+        }
+        ;
+    }
+    ;
     return;
 });
 client.on('messageReactionAdd', function (messageReaction, user) {
@@ -122,6 +129,15 @@ var unlockEmbed = {
     title: 'Lockdown Ended',
     color: '#03FF00',
     description: 'This server is now unlocked. `@everyone` is now able to send messages or connect to voice channels.',
+    footer: {
+        text: 'lockdown bot',
+        icon_url: 'https://i.imgur.com/AFN0zRy.png',
+    },
+    timestamp: new Date()
+};
+var pongEmbed = {
+    title: 'pong!',
+    color: '#03FF00',
     footer: {
         text: 'lockdown bot',
         icon_url: 'https://i.imgur.com/AFN0zRy.png',
