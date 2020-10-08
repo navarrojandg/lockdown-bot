@@ -94,7 +94,8 @@ const lockdownHandler = async (msg: Message) => {
       console.log(`[${g.id}] previous permissions`, g.prevPermissions);
       g.postPermissions = g.prevPermissions.filter(perm => !removePermissions.includes(perm));
       console.log(`[${g.id}] post permissions`, g.postPermissions);
-      // msg.guild.roles.everyone.setPermissions(new Discord.Permissions(g.postPermissions));
+      // set new permissions
+      msg.guild.roles.everyone.setPermissions(new Discord.Permissions(g.postPermissions));
       let sentMessage = await msg.channel.send({ embed: lockdownEmbed });
       g.activeMessage = sentMessage.id;
       await sentMessage.react('🔓');
@@ -107,9 +108,9 @@ const unlockHandler = async (messageReaction: MessageReaction) => {
   if(!!messageReaction.message.guild) {
     let g = gulidMap.get(messageReaction.message.guild.id);
     if(!!g) {
-      // let guildClient = await client.guilds.fetch(g.id);
+      let guildClient = await client.guilds.fetch(g.id);
       // restore the permissions
-      // guildClient.roles.everyone.setPermissions(new Discord.Permissions(g.prevPermissions));
+      guildClient.roles.everyone.setPermissions(new Discord.Permissions(g.prevPermissions));
       await messageReaction.message.channel.send({ embed: unlockEmbed });
     };
   };
