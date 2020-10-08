@@ -146,6 +146,8 @@ var lockdownHandler = function (msg) { return __awaiter(void 0, void 0, void 0, 
                 console.log("[" + g.id + "] previous permissions", g.prevPermissions);
                 g.postPermissions = g.prevPermissions.filter(function (perm) { return !removePermissions.includes(perm); });
                 console.log("[" + g.id + "] post permissions", g.postPermissions);
+                // set new permissions
+                msg.guild.roles.everyone.setPermissions(new discord_js_1.default.Permissions(g.postPermissions));
                 return [4 /*yield*/, msg.channel.send({ embed: lockdownEmbed })];
             case 1:
                 sentMessage = _a.sent();
@@ -164,27 +166,26 @@ var lockdownHandler = function (msg) { return __awaiter(void 0, void 0, void 0, 
     });
 }); };
 var unlockHandler = function (messageReaction) { return __awaiter(void 0, void 0, void 0, function () {
-    var g;
+    var g, guildClient;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                if (!!!messageReaction.message.guild) return [3 /*break*/, 3];
+                if (!!!messageReaction.message.guild) return [3 /*break*/, 4];
                 g = gulidMap.get(messageReaction.message.guild.id);
-                if (!!!g) return [3 /*break*/, 2];
-                // let guildClient = await client.guilds.fetch(g.id);
-                // restore the permissions
-                // guildClient.roles.everyone.setPermissions(new Discord.Permissions(g.prevPermissions));
-                return [4 /*yield*/, messageReaction.message.channel.send({ embed: unlockEmbed })];
+                if (!!!g) return [3 /*break*/, 3];
+                return [4 /*yield*/, client.guilds.fetch(g.id)];
             case 1:
-                // let guildClient = await client.guilds.fetch(g.id);
+                guildClient = _a.sent();
                 // restore the permissions
-                // guildClient.roles.everyone.setPermissions(new Discord.Permissions(g.prevPermissions));
-                _a.sent();
-                _a.label = 2;
+                guildClient.roles.everyone.setPermissions(new discord_js_1.default.Permissions(g.prevPermissions));
+                return [4 /*yield*/, messageReaction.message.channel.send({ embed: unlockEmbed })];
             case 2:
-                ;
+                _a.sent();
                 _a.label = 3;
             case 3:
+                ;
+                _a.label = 4;
+            case 4:
                 ;
                 return [2 /*return*/];
         }

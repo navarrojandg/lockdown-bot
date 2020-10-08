@@ -87,32 +87,40 @@ const removePermissions: Discord.PermissionString[] = [
 ];
 
 const lockdownHandler = async (msg: Message) => {
-  if(!!msg.guild) {
-    let g = gulidMap.get(msg.guild.id);
-    if(!!g) {
-      g.prevPermissions = msg.guild.roles.everyone.permissions.toArray();
-      console.log(`[${g.id}] previous permissions`, g.prevPermissions);
-      g.postPermissions = g.prevPermissions.filter(perm => !removePermissions.includes(perm));
-      console.log(`[${g.id}] post permissions`, g.postPermissions);
-      // set new permissions
-      msg.guild.roles.everyone.setPermissions(new Discord.Permissions(g.postPermissions));
-      let sentMessage = await msg.channel.send({ embed: lockdownEmbed });
-      g.activeMessage = sentMessage.id;
-      await sentMessage.react('🔓');
+  try {
+    if(!!msg.guild) {
+      let g = gulidMap.get(msg.guild.id);
+      if(!!g) {
+        g.prevPermissions = msg.guild.roles.everyone.permissions.toArray();
+        console.log(`[${g.id}] previous permissions`, g.prevPermissions);
+        g.postPermissions = g.prevPermissions.filter(perm => !removePermissions.includes(perm));
+        console.log(`[${g.id}] post permissions`, g.postPermissions);
+        // set new permissions
+        msg.guild.roles.everyone.setPermissions(new Discord.Permissions(g.postPermissions));
+        let sentMessage = await msg.channel.send({ embed: lockdownEmbed });
+        g.activeMessage = sentMessage.id;
+        await sentMessage.react('🔓');
+      };
     };
+  } catch(err) {
+    console.error(err);
   };
   return;
 };
 
 const unlockHandler = async (messageReaction: MessageReaction) => {
-  if(!!messageReaction.message.guild) {
-    let g = gulidMap.get(messageReaction.message.guild.id);
-    if(!!g) {
-      let guildClient = await client.guilds.fetch(g.id);
-      // restore the permissions
-      guildClient.roles.everyone.setPermissions(new Discord.Permissions(g.prevPermissions));
-      await messageReaction.message.channel.send({ embed: unlockEmbed });
+  try {
+    if(!!messageReaction.message.guild) {
+      let g = gulidMap.get(messageReaction.message.guild.id);
+      if(!!g) {
+        let guildClient = await client.guilds.fetch(g.id);
+        // restore the permissions
+        guildClient.roles.everyone.setPermissions(new Discord.Permissions(g.prevPermissions));
+        await messageReaction.message.channel.send({ embed: unlockEmbed });
+      };
     };
+  } catch(err) {
+    console.error(err);
   };
   return;
 };
