@@ -135,10 +135,11 @@ var removePermissions = [
     'SPEAK',
 ];
 var lockdownHandler = function (msg) { return __awaiter(void 0, void 0, void 0, function () {
-    var g, sentMessage;
+    var g, sentMessage, err_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
+                _a.trys.push([0, 5, , 6]);
                 if (!!!msg.guild) return [3 /*break*/, 4];
                 g = gulidMap.get(msg.guild.id);
                 if (!!!g) return [3 /*break*/, 3];
@@ -161,15 +162,23 @@ var lockdownHandler = function (msg) { return __awaiter(void 0, void 0, void 0, 
                 _a.label = 4;
             case 4:
                 ;
+                return [3 /*break*/, 6];
+            case 5:
+                err_1 = _a.sent();
+                console.error(err_1);
+                return [3 /*break*/, 6];
+            case 6:
+                ;
                 return [2 /*return*/];
         }
     });
 }); };
 var unlockHandler = function (messageReaction) { return __awaiter(void 0, void 0, void 0, function () {
-    var g, guildClient;
+    var g, guildClient, err_2;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
+                _a.trys.push([0, 5, , 6]);
                 if (!!!messageReaction.message.guild) return [3 /*break*/, 4];
                 g = gulidMap.get(messageReaction.message.guild.id);
                 if (!!!g) return [3 /*break*/, 3];
@@ -186,6 +195,13 @@ var unlockHandler = function (messageReaction) { return __awaiter(void 0, void 0
                 ;
                 _a.label = 4;
             case 4:
+                ;
+                return [3 /*break*/, 6];
+            case 5:
+                err_2 = _a.sent();
+                console.error(err_2);
+                return [3 /*break*/, 6];
+            case 6:
                 ;
                 return [2 /*return*/];
         }
