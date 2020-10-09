@@ -80,7 +80,7 @@ client.on('message', function (msg) {
     ;
     if (msg.channel.type == 'dm') {
         if (msg.content.startsWith('!ping')) {
-            msg.reply({ embed: pongEmbed });
+            msg.reply({ embed: pongEmbed() });
         }
         ;
     }
@@ -109,40 +109,46 @@ client.on('messageReactionAdd', function (messageReaction, user) {
     ;
     return;
 });
-var lockdownEmbed = {
-    title: 'Lockdown Started',
-    color: '#FFBC00',
-    description: 'This server is now locked. During this time, `@everyone` will be unable to send messages or connect to voice channels.',
-    fields: [
-        {
-            name: '\u200B',
-            value: 'React with 🔓 to unlock the server.'
-        }
-    ],
-    footer: {
-        text: 'lockdown bot',
-        icon_url: 'https://i.imgur.com/AFN0zRy.png',
-    },
-    timestamp: new Date()
+var lockdownEmbed = function () {
+    return {
+        title: 'Lockdown Started',
+        color: '#FFBC00',
+        description: 'This server is now locked. During this time, `@everyone` will be unable to send messages or connect to voice channels.',
+        fields: [
+            {
+                name: '\u200B',
+                value: 'React with 🔓 to unlock the server.'
+            }
+        ],
+        footer: {
+            text: 'lockdown bot',
+            icon_url: 'https://i.imgur.com/AFN0zRy.png',
+        },
+        timestamp: new Date()
+    };
 };
-var unlockEmbed = {
-    title: 'Lockdown Ended',
-    color: '#017C1B',
-    description: 'This server is now unlocked. `@everyone` is now able to send messages or connect to voice channels.',
-    footer: {
-        text: 'lockdown bot',
-        icon_url: 'https://i.imgur.com/AFN0zRy.png',
-    },
-    timestamp: new Date()
+var unlockEmbed = function () {
+    return {
+        title: 'Lockdown Ended',
+        color: '#017C1B',
+        description: 'This server is now unlocked. `@everyone` is now able to send messages or connect to voice channels.',
+        footer: {
+            text: 'lockdown bot',
+            icon_url: 'https://i.imgur.com/AFN0zRy.png',
+        },
+        timestamp: new Date()
+    };
 };
-var pongEmbed = {
-    title: 'pong!',
-    color: '#017C1B',
-    footer: {
-        text: 'lockdown bot',
-        icon_url: 'https://i.imgur.com/AFN0zRy.png',
-    },
-    timestamp: new Date()
+var pongEmbed = function () {
+    return {
+        title: 'pong!',
+        color: '#017C1B',
+        footer: {
+            text: 'lockdown bot',
+            icon_url: 'https://i.imgur.com/AFN0zRy.png',
+        },
+        timestamp: new Date()
+    };
 };
 var removePermissions = [
     'SEND_MESSAGES',
@@ -165,7 +171,7 @@ var lockdownHandler = function (msg) { return __awaiter(void 0, void 0, void 0, 
                 console.log("[" + g.id + "] post permissions", g.postPermissions);
                 // set new permissions
                 msg.guild.roles.everyone.setPermissions(new discord_js_1.default.Permissions(g.postPermissions));
-                return [4 /*yield*/, msg.channel.send({ embed: lockdownEmbed })];
+                return [4 /*yield*/, msg.channel.send({ embed: lockdownEmbed() })];
             case 1:
                 sentMessage = _a.sent();
                 g.activeMessage = sentMessage.id;
@@ -203,7 +209,7 @@ var unlockHandler = function (messageReaction) { return __awaiter(void 0, void 0
                 guildClient = _a.sent();
                 // restore the permissions
                 guildClient.roles.everyone.setPermissions(new discord_js_1.default.Permissions(g.prevPermissions));
-                return [4 /*yield*/, messageReaction.message.channel.send({ embed: unlockEmbed })];
+                return [4 /*yield*/, messageReaction.message.channel.send({ embed: unlockEmbed() })];
             case 2:
                 _a.sent();
                 _a.label = 3;
