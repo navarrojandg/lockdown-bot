@@ -58,7 +58,7 @@ client.on('messageReactionAdd', (messageReaction, user) => {
 
 const lockdownEmbed = () => {
   return {
-    title: 'Lockdown Started',
+    title: 'Lockdown Enabled',
     color: '#FFBC00',
     description: 'This server is now locked. During this time, `@everyone` will be unable to send messages or connect to voice channels.',
     fields: [
@@ -77,7 +77,7 @@ const lockdownEmbed = () => {
 
 const unlockEmbed = () => {
   return {
-    title: 'Lockdown Ended',
+    title: 'Lockdown Disabled',
     color: '#017C1B',
     description: 'This server is now unlocked. `@everyone` is now able to send messages or connect to voice channels.',
     footer: {
