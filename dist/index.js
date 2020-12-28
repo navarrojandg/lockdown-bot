@@ -202,7 +202,11 @@ function updateGuild(guild) {
         return;
     return guilds.updateOne({ guildId: guild.id }, {
         $set: { guildId: guild.id, roles: [] },
-        $setOnInsert: { activeMessage: '' }
+        $setOnInsert: {
+            activeMessage: '',
+            guildName: guild.name,
+            guildRegion: guild.region
+        }
     }, { upsert: true });
 }
 ;
