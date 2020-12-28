@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "bundle": "npm run tsc && git archive -v --output=bundle.zip --format=zip main",
+    "bundle": "npm run tsc && git archive -v --output=bundle.zip --format=zip HEAD",
     "tsc": "tsc --build src",
     "start": "npm run tsc && env TZ=America/Los_Angeles node ./dist"
   },
@@ -26,16 +26,17 @@
   },
   "homepage": "https://github.com/navarrojandg/lockdown-bot#readme",
   "dependencies": {
-    "@types/ws": "^7.2.7",
     "discord.js": "^12.3.1",
     "dotenv": "^8.2.0",
     "mongodb": "^3.6.3",
-    "typescript": "^4.1.3",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
     "@types/mongodb": "^3.6.3",
     "@types/node": "^14.11.5",
-    "@types/yargs": "^15.0.12"
+    "@types/ws": "^7.4.0",
+    "@types/yargs": "^15.0.12",
+    "ts-loader": "^8.0.12",
+    "typescript": "^4.1.3"
   }
 }
