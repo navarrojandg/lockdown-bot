@@ -101,7 +101,7 @@ client.on('message', function (msg) {
     var _a;
     if (msg.channel.type == 'text') {
         if ((_a = msg.member) === null || _a === void 0 ? void 0 : _a.roles.highest.permissions.has('ADMINISTRATOR')) {
-            if (msg.content.startsWith('!test')) {
+            if (msg.content.startsWith('!lockdown')) {
                 lockdownHandler(msg);
             }
             ;
