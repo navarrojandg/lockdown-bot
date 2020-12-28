@@ -60,12 +60,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var dotenv = __importStar(require("dotenv"));
 dotenv.config();
-var index_1 = __importDefault(require("./cli/index"));
+var cli_1 = __importDefault(require("./cli"));
 var discord_js_1 = __importDefault(require("discord.js"));
+var mongodb_1 = require("mongodb");
+// connect to db
+var db;
+var guilds;
+var mongo = new mongodb_1.MongoClient(process.env.DB_URI, { useUnifiedTopology: true });
+mongo.connect(function (err, client) {
+    if (!!err) {
+        console.log('Error connecting to db');
+    }
+    ;
+    console.log('Connected to db');
+    db = client.db('discord');
+    guilds = db.collection('guilds');
+});
+// connect to discord
 var client = new discord_js_1.default.Client();
 var token = process.env.TOKEN;
 ;
-var gulidMap = new Map();
+;
+var removePermissions = [
+    'SEND_MESSAGES',
+    'CONNECT',
+    'STREAM',
+    'SPEAK',
+];
 client.on('ready', function () {
     var _a, _b;
     (_a = client.user) === null || _a === void 0 ? void 0 : _a.setPresence({
@@ -77,30 +98,11 @@ client.on('ready', function () {
     console.log(((_b = client.user) === null || _b === void 0 ? void 0 : _b.tag) + " is live!");
 });
 client.on('message', function (msg) {
-    var _a, _b;
+    var _a;
     if (msg.channel.type == 'text') {
         if ((_a = msg.member) === null || _a === void 0 ? void 0 : _a.roles.highest.permissions.has('ADMINISTRATOR')) {
-            if (msg.content.startsWith('!lockdown')) {
-                // cache the active guild
-                if (!!msg.guild)
-                    gulidMap.set(msg.guild.id, { id: msg.guild.id });
-                lockdownHandler(msg);
-            }
-            ;
             if (msg.content.startsWith('!test')) {
-                // parse roles to modify
-                // modify each role as long as its active
-                var rolesToMute_1 = index_1.default.parse(msg.content).role;
-                console.log(rolesToMute_1);
-                (_b = msg.guild) === null || _b === void 0 ? void 0 : _b.roles.fetch().then(function (_a) {
-                    var cache = _a.cache;
-                    cache.forEach(function (role) {
-                        if (rolesToMute_1.includes(role.name)) {
-                            console.log(role);
-                        }
-                        ;
-                    });
-                });
+                lockdownHandler(msg);
             }
             ;
         }
@@ -116,33 +118,142 @@ client.on('message', function (msg) {
     ;
     return;
 });
-client.on('messageReactionAdd', function (messageReaction, user) {
-    var _a, _b;
-    if (user.id == ((_a = client.user) === null || _a === void 0 ? void 0 : _a.id))
-        return;
-    var guild = messageReaction.message.guild;
-    if (!!guild) {
-        if (gulidMap.has(guild.id)) {
-            if (messageReaction.message.id === ((_b = gulidMap.get(guild.id)) === null || _b === void 0 ? void 0 : _b.activeMessage)) {
-                var userReaction = guild === null || guild === void 0 ? void 0 : guild.member(user.id);
-                if (userReaction === null || userReaction === void 0 ? void 0 : userReaction.roles.highest.permissions.has('ADMINISTRATOR')) {
-                    if (messageReaction.emoji.name == '🔓')
-                        unlockHandler(messageReaction);
+var lockdownHandler = function (msg) { return __awaiter(void 0, void 0, void 0, function () {
+    var roles, sentMessage, err_1;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 7, , 8]);
+                return [4 /*yield*/, cantLockdown(msg.guild)];
+            case 1:
+                if (_a.sent()) {
+                    return [2 /*return*/, msg.channel.send({ embed: responseEmbed('Lockdown currently active, please unlock the server before starting a new lockdown.') })];
                 }
                 ;
-            }
-            ;
+                return [4 /*yield*/, updateGuild(msg.guild)];
+            case 2:
+                _a.sent();
+                return [4 /*yield*/, parseRolesFromMsg(msg)];
+            case 3:
+                roles = _a.sent();
+                roles === null || roles === void 0 ? void 0 : roles.forEach(function (role) { return __awaiter(void 0, void 0, void 0, function () {
+                    var err_2;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                _a.trys.push([0, 3, , 4]);
+                                return [4 /*yield*/, updateRole(role)];
+                            case 1:
+                                _a.sent();
+                                return [4 /*yield*/, lockRole(role)];
+                            case 2:
+                                _a.sent();
+                                return [3 /*break*/, 4];
+                            case 3:
+                                err_2 = _a.sent();
+                                console.error(err_2);
+                                return [3 /*break*/, 4];
+                            case 4:
+                                ;
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+                return [4 /*yield*/, msg.channel.send({
+                        embed: lockdownEmbed(roles)
+                    })];
+            case 4:
+                sentMessage = _a.sent();
+                return [4 /*yield*/, updateActiveMessage(sentMessage)];
+            case 5:
+                _a.sent();
+                return [4 /*yield*/, sentMessage.react('🔓')];
+            case 6:
+                _a.sent();
+                return [3 /*break*/, 8];
+            case 7:
+                err_1 = _a.sent();
+                console.error(err_1);
+                return [3 /*break*/, 8];
+            case 8:
+                ;
+                return [2 /*return*/];
         }
-        ;
-    }
-    ;
-    return;
-});
-var lockdownEmbed = function () {
+    });
+}); };
+function cantLockdown(guild) {
+    return __awaiter(this, void 0, void 0, function () {
+        var guildDoc;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, getGuild(guild === null || guild === void 0 ? void 0 : guild.id)];
+                case 1:
+                    guildDoc = _a.sent();
+                    return [2 /*return*/, !!(guildDoc === null || guildDoc === void 0 ? void 0 : guildDoc.activeMessage)];
+            }
+        });
+    });
+}
+;
+function updateGuild(guild) {
+    if (guild == null)
+        return;
+    return guilds.updateOne({ guildId: guild.id }, {
+        $set: { guildId: guild.id, roles: [] },
+        $setOnInsert: { activeMessage: '' }
+    }, { upsert: true });
+}
+;
+function parseRolesFromMsg(msg) {
+    var _a, _b;
+    return __awaiter(this, void 0, void 0, function () {
+        var targetRoles, roles;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    targetRoles = cli_1.default.parse(msg.content).role;
+                    return [4 /*yield*/, ((_a = msg.guild) === null || _a === void 0 ? void 0 : _a.roles.fetch())];
+                case 1:
+                    roles = (_b = (_c.sent())) === null || _b === void 0 ? void 0 : _b.cache;
+                    return [2 /*return*/, roles === null || roles === void 0 ? void 0 : roles.filter(function (role) {
+                            return targetRoles.includes(role.name);
+                        })];
+            }
+        });
+    });
+}
+;
+function updateRole(role) {
+    return guilds.findOneAndUpdate({ guildId: role.guild.id }, { $addToSet: {
+            roles: {
+                roleId: role.id,
+                name: role.name,
+                permissions: role.permissions.toArray()
+            }
+        } });
+}
+;
+function lockRole(role) {
+    var updatedPerms = role.permissions.toArray()
+        .filter(function (permission) { return !removePermissions.includes(permission); });
+    role.setPermissions(new discord_js_1.default.Permissions(updatedPerms));
+}
+;
+function updateActiveMessage(msg) {
+    var _a;
+    return guilds.updateOne({ guildId: (_a = msg.guild) === null || _a === void 0 ? void 0 : _a.id }, {
+        $set: { activeMessage: msg.id }
+    });
+}
+;
+var lockdownEmbed = function (roles) {
+    var roleString = roles === null || roles === void 0 ? void 0 : roles.reduce(function (acc, curr) {
+        return acc += curr.name + ", ";
+    }, '');
     return {
         title: 'Lockdown Enabled',
         color: '#FFBC00',
-        description: 'This server is now locked. During this time, `@everyone` will be unable to send messages or connect to voice channels.',
+        description: "This server is now locked. During this time: `" + (roleString === null || roleString === void 0 ? void 0 : roleString.trim()) + "` will be unable to send messages or connect to voice channels.",
         fields: [
             {
                 name: '\u200B',
@@ -150,112 +261,124 @@ var lockdownEmbed = function () {
             }
         ],
         footer: {
-            text: 'lockdown bot',
+            text: "lockdown bot \u2022 " + new Date().toLocaleString(),
             icon_url: 'https://i.imgur.com/AFN0zRy.png',
-        },
-        timestamp: new Date()
+        }
     };
 };
-var unlockEmbed = function () {
+client.on('raw', function (packet) { return __awaiter(void 0, void 0, void 0, function () {
+    var guild_1, guildDoc, userReaction, channel, err_3;
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _c.trys.push([0, 10, , 11]);
+                if (!['MESSAGE_REACTION_ADD'].includes(packet.t))
+                    return [2 /*return*/];
+                if (packet.d.user_id == ((_a = client.user) === null || _a === void 0 ? void 0 : _a.id))
+                    return [2 /*return*/];
+                return [4 /*yield*/, client.guilds.fetch(packet.d.guild_id)];
+            case 1:
+                guild_1 = _c.sent();
+                return [4 /*yield*/, getGuild(guild_1.id)];
+            case 2:
+                guildDoc = _c.sent();
+                if (!(packet.d.message_id == (guildDoc === null || guildDoc === void 0 ? void 0 : guildDoc.activeMessage))) return [3 /*break*/, 9];
+                return [4 /*yield*/, guild_1.members.fetch(packet.d.user_id)];
+            case 3:
+                userReaction = _c.sent();
+                if (!(userReaction === null || userReaction === void 0 ? void 0 : userReaction.roles.highest.permissions.has('ADMINISTRATOR'))) return [3 /*break*/, 8];
+                if (!(packet.d.emoji.name == '🔓')) return [3 /*break*/, 7];
+                (_b = guildDoc === null || guildDoc === void 0 ? void 0 : guildDoc.roles) === null || _b === void 0 ? void 0 : _b.forEach(function (_a) {
+                    var roleId = _a.roleId, permissions = _a.permissions;
+                    return __awaiter(void 0, void 0, void 0, function () {
+                        var role;
+                        return __generator(this, function (_b) {
+                            switch (_b.label) {
+                                case 0: return [4 /*yield*/, (guild_1 === null || guild_1 === void 0 ? void 0 : guild_1.roles.fetch(roleId))];
+                                case 1:
+                                    role = _b.sent();
+                                    return [4 /*yield*/, (role === null || role === void 0 ? void 0 : role.setPermissions(new discord_js_1.default.Permissions(permissions)))];
+                                case 2:
+                                    _b.sent();
+                                    return [2 /*return*/];
+                            }
+                        });
+                    });
+                });
+                return [4 /*yield*/, client.channels.fetch(packet.d.channel_id)];
+            case 4:
+                channel = _c.sent();
+                return [4 /*yield*/, channel.send({ embed: unlockEmbed(guildDoc === null || guildDoc === void 0 ? void 0 : guildDoc.roles) })];
+            case 5:
+                _c.sent();
+                return [4 /*yield*/, clearActiveMessage(guild_1.id)];
+            case 6:
+                _c.sent();
+                _c.label = 7;
+            case 7:
+                ;
+                _c.label = 8;
+            case 8:
+                ;
+                _c.label = 9;
+            case 9:
+                ;
+                return [3 /*break*/, 11];
+            case 10:
+                err_3 = _c.sent();
+                console.error(err_3);
+                return [3 /*break*/, 11];
+            case 11:
+                ;
+                return [2 /*return*/];
+        }
+    });
+}); });
+function getGuild(id) {
+    return guilds.findOne({ guildId: id });
+}
+;
+var unlockEmbed = function (roles) {
+    var roleString = roles === null || roles === void 0 ? void 0 : roles.reduce(function (acc, curr) {
+        return acc += curr.name + ", ";
+    }, '');
     return {
         title: 'Lockdown Disabled',
         color: '#017C1B',
-        description: 'This server is now unlocked. `@everyone` is now able to send messages or connect to voice channels.',
+        description: "This server is now unlocked. `" + (roleString === null || roleString === void 0 ? void 0 : roleString.trim()) + "` is now able to send messages or connect to voice channels.",
         footer: {
-            text: 'lockdown bot',
+            text: "lockdown bot \u2022 " + new Date().toLocaleString(),
             icon_url: 'https://i.imgur.com/AFN0zRy.png',
-        },
-        timestamp: new Date()
+        }
     };
 };
+function clearActiveMessage(guildId) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            return [2 /*return*/, guilds.updateOne({ guildId: guildId }, { $set: { activeMessage: '' } })];
+        });
+    });
+}
+;
 var pongEmbed = function () {
     return {
         title: 'pong!',
         color: '#017C1B',
         footer: {
-            text: 'lockdown bot',
+            text: "lockdown bot \u2022 " + new Date().toLocaleString(),
             icon_url: 'https://i.imgur.com/AFN0zRy.png',
-        },
-        timestamp: new Date()
+        }
     };
 };
-var removePermissions = [
-    'SEND_MESSAGES',
-    'CONNECT',
-    'STREAM',
-    'SPEAK',
-];
-var lockdownHandler = function (msg) { return __awaiter(void 0, void 0, void 0, function () {
-    var g, sentMessage, err_1;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                _a.trys.push([0, 5, , 6]);
-                if (!!!msg.guild) return [3 /*break*/, 4];
-                g = gulidMap.get(msg.guild.id);
-                if (!!!g) return [3 /*break*/, 3];
-                g.prevPermissions = msg.guild.roles.everyone.permissions.toArray();
-                console.log("[" + g.id + "] previous permissions", g.prevPermissions);
-                g.postPermissions = g.prevPermissions.filter(function (perm) { return !removePermissions.includes(perm); });
-                console.log("[" + g.id + "] post permissions", g.postPermissions);
-                // set new permissions
-                msg.guild.roles.everyone.setPermissions(new discord_js_1.default.Permissions(g.postPermissions));
-                return [4 /*yield*/, msg.channel.send({ embed: lockdownEmbed() })];
-            case 1:
-                sentMessage = _a.sent();
-                g.activeMessage = sentMessage.id;
-                return [4 /*yield*/, sentMessage.react('🔓')];
-            case 2:
-                _a.sent();
-                _a.label = 3;
-            case 3:
-                ;
-                _a.label = 4;
-            case 4:
-                ;
-                return [3 /*break*/, 6];
-            case 5:
-                err_1 = _a.sent();
-                console.error(err_1);
-                return [3 /*break*/, 6];
-            case 6:
-                ;
-                return [2 /*return*/];
+var responseEmbed = function (message) {
+    return {
+        color: '#FFBC00',
+        description: message,
+        footer: {
+            text: "lockdown bot \u2022 " + new Date().toLocaleString(),
+            icon_url: 'https://i.imgur.com/AFN0zRy.png',
         }
-    });
-}); };
-var unlockHandler = function (messageReaction) { return __awaiter(void 0, void 0, void 0, function () {
-    var g, guildClient, err_2;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                _a.trys.push([0, 5, , 6]);
-                if (!!!messageReaction.message.guild) return [3 /*break*/, 4];
-                g = gulidMap.get(messageReaction.message.guild.id);
-                if (!!!g) return [3 /*break*/, 3];
-                return [4 /*yield*/, client.guilds.fetch(g.id)];
-            case 1:
-                guildClient = _a.sent();
-                // restore the permissions
-                guildClient.roles.everyone.setPermissions(new discord_js_1.default.Permissions(g.prevPermissions));
-                return [4 /*yield*/, messageReaction.message.channel.send({ embed: unlockEmbed() })];
-            case 2:
-                _a.sent();
-                _a.label = 3;
-            case 3:
-                ;
-                _a.label = 4;
-            case 4:
-                ;
-                return [3 /*break*/, 6];
-            case 5:
-                err_2 = _a.sent();
-                console.error(err_2);
-                return [3 /*break*/, 6];
-            case 6:
-                ;
-                return [2 /*return*/];
-        }
-    });
-}); };
+    };
+};
 client.login(token);
