@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "bundle": "npm run tsc && git archive -v --output=bundle.zip --format=zip HEAD",
     "tsc": "tsc --build src",
-    "start": "npm run tsc && env TZ=America/Los_Angeles node ./dist"
+    "start": "env TZ=America/Los_Angeles node ./dist",
+    "star:dev": "npm run tsc && npm start"
   },
   "repository": {
     "type": "git",
