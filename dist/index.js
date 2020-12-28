@@ -136,6 +136,8 @@ var lockdownHandler = function (msg) { return __awaiter(void 0, void 0, void 0, 
                 return [4 /*yield*/, parseRolesFromMsg(msg)];
             case 3:
                 roles = _a.sent();
+                if (!!roles && roles.size < 1)
+                    return [2 /*return*/];
                 roles === null || roles === void 0 ? void 0 : roles.forEach(function (role) { return __awaiter(void 0, void 0, void 0, function () {
                     var err_2;
                     return __generator(this, function (_a) {
@@ -205,21 +207,11 @@ function updateGuild(guild) {
 }
 ;
 function parseRolesFromMsg(msg) {
-    var _a, _b;
-    return __awaiter(this, void 0, void 0, function () {
-        var targetRoles, roles;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
-                case 0:
-                    targetRoles = cli_1.default.parse(msg.content).role;
-                    return [4 /*yield*/, ((_a = msg.guild) === null || _a === void 0 ? void 0 : _a.roles.fetch())];
-                case 1:
-                    roles = (_b = (_c.sent())) === null || _b === void 0 ? void 0 : _b.cache;
-                    return [2 /*return*/, roles === null || roles === void 0 ? void 0 : roles.filter(function (role) {
-                            return targetRoles.includes(role.name);
-                        })];
-            }
-        });
+    var _a;
+    var targetRoles = cli_1.default.parse(msg.content).role;
+    var roles = (_a = msg.guild) === null || _a === void 0 ? void 0 : _a.roles.cache;
+    return roles === null || roles === void 0 ? void 0 : roles.filter(function (role) {
+        return targetRoles.includes(role.name);
     });
 }
 ;

@@ -23,6 +23,8 @@ const token = process.env.TOKEN;
 
 interface GuildContainer {
   guildId: string;
+  guildName: string;
+  guildRegion: string;
   activeMessage: string;
   roles: RoleContainer[];
 };
@@ -104,7 +106,11 @@ function updateGuild(guild: Discord.Guild | null) {
     {guildId: guild.id},
     {
       $set: {guildId: guild.id, roles: []},
-      $setOnInsert: {activeMessage: ''}
+      $setOnInsert: {
+        activeMessage: '',
+        guildName: guild.name,
+        guildRegion: guild.region
+      }
     },
     {upsert: true}
   );
