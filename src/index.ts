@@ -53,7 +53,7 @@ client.on('ready', () => {
 client.on('message', (msg: Message) => {
   if(msg.channel.type == 'text') {
     if(msg.member?.roles.highest.permissions.has('ADMINISTRATOR')) {
-      if(msg.content.startsWith('!test')) {
+      if(msg.content.startsWith('!lockdown')) {
         lockdownHandler(msg);
       };
     };
