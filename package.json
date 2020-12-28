@@ -5,10 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "bundle": "npm run tsc && git archive -v --output=bundle.zip --format=zip HEAD",
+    "bundle": "npm run tsc && git archive -v --output=bundle.zip --format=zip main",
     "tsc": "tsc --build src",
-    "start": "env TZ=America/Los_Angeles node ./dist",
-    "start:dev": "npm run tsc && npm start"
+    "start": "npm run tsc && env TZ=America/Los_Angeles node ./dist"
   },
   "repository": {
     "type": "git",
