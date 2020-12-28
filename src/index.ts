@@ -73,6 +73,7 @@ const lockdownHandler = async (msg: Discord.Message) => {
     };
     await updateGuild(msg.guild);
     const roles = await parseRolesFromMsg(msg);
+    if (!!roles && roles.size < 1) return;
     roles?.forEach(async (role) => {
       try {
         await updateRole(role);
@@ -109,9 +110,9 @@ function updateGuild(guild: Discord.Guild | null) {
   );
 };
 
-async function parseRolesFromMsg(msg: Discord.Message) {
+function parseRolesFromMsg(msg: Discord.Message) {
   const targetRoles = yargs.parse(msg.content).role as string[];
-  const roles = (await msg.guild?.roles.fetch())?.cache;
+  const roles = msg.guild?.roles.cache;
   return roles?.filter(role => {
     return targetRoles.includes(role.name);
   });
