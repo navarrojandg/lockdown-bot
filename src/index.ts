@@ -1,15 +1,17 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-
+import yargs from './cli/index';
 import Discord, { Message, MessageReaction } from 'discord.js';
 const client = new Discord.Client();
 const token = process.env.TOKEN;
+
 interface GuildContainer {
   id: string;
   activeMessage?: string;
   prevPermissions?: Discord.PermissionString[];
   postPermissions?: Discord.PermissionString[];
 };
+
 const gulidMap = new Map<string, GuildContainer>();
 client.on('ready', () => {
   client.user?.setPresence({
@@ -28,6 +30,19 @@ client.on('message', (msg: Message) => {
         // cache the active guild
         if(!!msg.guild) gulidMap.set(msg.guild.id, { id: msg.guild.id });
         lockdownHandler(msg);
+      };
+      if (msg.content.startsWith('!test')) {
+        // parse roles to modify
+        // modify each role as long as its active
+        const rolesToMute = yargs.parse(msg.content).role as string[];
+        console.log(rolesToMute);
+        msg.guild?.roles.fetch().then(({cache}) => {
+          cache.forEach(role => {
+            if(rolesToMute.includes(role.name)) {
+              console.log(role);
+            };
+          });
+        });
       };
     };
   };
