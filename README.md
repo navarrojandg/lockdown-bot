@@ -1,7 +1,7 @@
 # lockdown-bot
 
 ## Add this bot to your server
-`https://discord.com/api/oauth2/authorize?client_id=762970415701557248&permissions=8&scope=bot`
+[OAuth Link](https://discord.com/api/oauth2/authorize?client_id=762970415701557248&permissions=8&scope=bot)
 
 ## Usage
 `<command> <tags>...`
